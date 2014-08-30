@@ -8,5 +8,6 @@ class marathon::service (
   service { 'marathon':
     ensure   => $ensure,
     provider => $provider,
+    enable   => true,
   }
 }

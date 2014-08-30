@@ -34,12 +34,12 @@ class marathon::source (
   }
   ->
   exec { "marathon-${version_real} copy to install_dir":
-    command => "cp -a ${download_extract_dir}/marathon-${version_real} ${install_dir}",
+    command => "/bin/cp -a ${download_extract_dir}/marathon-${version_real} ${install_dir}",
     creates => $install_dir,
   }
   ->
   exec { 'chown marathon install_dir':
-    command     => "chown -R ${user}:${group} ${install_dir}",
+    command     => "/bin/chown -R ${user}:${group} ${install_dir}",
     refreshonly => true,
   }
 
@@ -77,10 +77,21 @@ class marathon::source (
       }
     }
   }
+  if $::osfamily == 'Debian' {
+      file { "marathon-${version_real} service":
+        ensure  => present,
+        path    => '/etc/init.d/marathon',
+        content => template('marathon/marathon.sh.debian.erb'),
+        mode    => '0755',
+        owner   => $user,
+        group   => $group,
+        require => Exec['chown marathon install_dir'],
+      }
+  }
 
   class { 'marathon::service':
     ensure   => $marathon::ensure,
     provider => $provider,
-    require  => File["marathon-${version_real} service"],
+    require => File["marathon-${version_real} service"],
   }
 }
